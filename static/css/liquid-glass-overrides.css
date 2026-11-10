@@ -1,0 +1,65 @@
+/* ═══════════════════════════════════════════════════════════════════
+   LIQUID GLASS — intégration sur le dashboard PRONOTE
+   Rend les grandes surfaces translucides pour laisser voir l'effet
+   de réfraction WebGL injecté en fond par glass-adapter.js, et ajoute
+   un arrière-plan visuel (sinon rien ne se "réfracte").
+   ═══════════════════════════════════════════════════════════════════ */
+
+/* Fond décoratif global : donne de la matière au verre à réfracter */
+body {
+  position: relative;
+}
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  background:
+    radial-gradient(circle at 15% 10%, color-mix(in srgb, var(--primary) 35%, transparent), transparent 55%),
+    radial-gradient(circle at 85% 30%, color-mix(in srgb, var(--primary-dark) 30%, transparent), transparent 50%),
+    radial-gradient(circle at 50% 90%, color-mix(in srgb, var(--primary) 20%, transparent), transparent 60%),
+    var(--background);
+  transition: background .25s ease;
+}
+
+/* Surfaces glass : fond d'origine rendu translucide pour laisser
+   apparaître le canvas WebGL injecté juste en-dessous du contenu */
+.a-glass {
+  background: color-mix(in srgb, var(--card) 55%, transparent) !important;
+  backdrop-filter: blur(1px);
+  border-color: color-mix(in srgb, var(--border) 70%, transparent) !important;
+}
+
+.sidebar.a-glass,
+.mobile-topbar.a-glass {
+  background: color-mix(in srgb, var(--sidebar-bg) 50%, transparent) !important;
+}
+
+.nav-item.a-glass.actif {
+  background: color-mix(in srgb, var(--primary) 75%, transparent) !important;
+}
+
+.btn.a-glass {
+  background: color-mix(in srgb, var(--primary) 80%, transparent) !important;
+  border: none;
+}
+.btn.secondaire.a-glass {
+  background: color-mix(in srgb, var(--overground) 55%, transparent) !important;
+}
+
+.modale-boite.a-glass {
+  background: color-mix(in srgb, var(--card) 70%, transparent) !important;
+  backdrop-filter: blur(6px);
+}
+
+/* Le calque glass injecté ne doit jamais bloquer les interactions,
+   ni passer visuellement au-dessus du contenu réel (icône/texte) */
+.a-glass > .glass-container {
+  border-radius: inherit;
+  z-index: 0;
+}
+
+/* Sur le thème "hacker", le fond décoratif existant prend le dessus */
+:root[data-theme="hacker"] body::before {
+  background: none;
+}

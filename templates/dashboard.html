@@ -1,0 +1,638 @@
+{% extends "base.html" %}
+{% block titre %}Dashboard PRONOTE{% endblock %}
+{% block contenu %}
+
+<div class="app">
+  <!-- ═══════════════════ COIN DE GESTION (haut-droite) ═══════════════════ -->
+  <div class="coin-gestion">
+    <div class="coin-gestion__brand">
+      <img class="logo" src="{{ url_for('static', filename='logo.png') }}" alt="Logo">
+      <span>PRONOTE</span>
+    </div>
+    <button class="coin-gestion__btn" id="btn-rafraichir-global" title="Tout rafraîchir" aria-label="Tout rafraîchir">🔄</button>
+    <button class="coin-gestion__btn" id="btn-coin-gestion" title="Gestion" aria-haspopup="true" aria-expanded="false">
+      ⚙️
+      <span class="pastille-badge" id="badge-gestion" hidden>0</span>
+    </button>
+  </div>
+
+  <div class="coin-gestion__panneau" id="panneau-coin-gestion">
+    <div class="coin-gestion__profil" id="btn-profil" data-vue-cible="profil">
+      <div class="coin-gestion__profil-avatar" id="profil-avatar-mini">?</div>
+      <div class="coin-gestion__profil-texte">
+        <div class="coin-gestion__profil-nom" id="profil-nom-mini">Chargement…</div>
+        <div class="coin-gestion__profil-sub" id="profil-classe-mini">—</div>
+      </div>
+    </div>
+
+    <div class="coin-gestion__ligne">
+      <span class="coin-gestion__ligne-label">Thème</span>
+      <div class="theme-picker theme-picker--glass" id="theme-picker" role="radiogroup" aria-label="Choix du thème">
+        <button class="theme-picker__opt" data-theme-opt="clair" role="radio" title="Clair">☀️</button>
+        <button class="theme-picker__opt" data-theme-opt="sombre" role="radio" title="Sombre">🌙</button>
+        <button class="theme-picker__opt" data-theme-opt="hacker" role="radio" title="Hacker">💀</button>
+
+        <!-- Pastille liquid-glass qui glisse sur le bouton actif -->
+        <div class="theme-picker__glass" id="theme-picker-glass">
+          <svg class="glass-filter-svg" id="themePickerFilterSvg" style="width:0;height:0;position:absolute;">
+            <defs>
+              <filter id="themePickerGlassFilter" x="-50%" y="-50%" width="200%" height="200%" color-interpolation-filters="sRGB">
+                <feGaussianBlur id="themePickerFilterBlur" in="SourceGraphic" stdDeviation="0.3" result="blurred" />
+                <feImage id="themePickerDisplacementImage" href="" x="0" y="0" width="26" height="26" result="displacement_map" preserveAspectRatio="none" />
+                <feDisplacementMap id="themePickerDisplacementMap" in="blurred" in2="displacement_map" scale="10" xChannelSelector="R" yChannelSelector="G" result="displaced" />
+                <feImage id="themePickerSpecularImage" href="" x="0" y="0" width="26" height="26" result="specular_layer" preserveAspectRatio="none" />
+                <feComponentTransfer in="specular_layer" result="specular_faded">
+                  <feFuncA id="themePickerSpecularAlpha" type="linear" slope="0.6" />
+                </feComponentTransfer>
+                <feBlend in="specular_faded" in2="displaced" mode="screen" />
+              </filter>
+            </defs>
+          </svg>
+        </div>
+      </div>
+    </div>
+
+    <div class="coin-gestion__item" data-vue-cible="bulletin" style="margin-top:6px;">
+      <span class="icone">🧾</span> Bulletin
+    </div>
+    <div class="coin-gestion__item" data-vue-cible="simulateur">
+      <span class="icone">🧮</span> Simulateur de notes
+    </div>
+    <div class="coin-gestion__item" data-vue-cible="professeurs">
+      <span class="icone">🧑‍🏫</span> Professeurs et contacts
+    </div>
+    <div class="coin-gestion__item" data-vue-cible="gestion">
+      <span class="icone">⚙️</span> Gestion
+    </div>
+  </div>
+
+  <!-- ═══════════════════ BOTTOM NAV BAR (liquid glass) ═══════════════════ -->
+  <div class="lgnav-conteneur">
+    <div id="lgnav-principale"></div>
+  </div>
+
+  <!-- ═══════════════════ CONTENU ═══════════════════ -->
+  <main class="contenu-principal">
+
+    <!-- ── Aujourd'hui ──────────────────────────────────────────────────── -->
+    <div class="vue actif" id="vue-aujourdhui">
+      <div class="entete-page">
+        <div>
+          <h1 id="titre-jour">Aujourd'hui</h1>
+          <p class="soustitre" id="soustitre-jour"></p>
+        </div>
+      </div>
+
+      <div class="carte resume-matin" id="carte-resume-matin">
+        <div class="resume-matin__entete">
+          <div class="carte__titre" id="resume-titre" style="margin:0;">☀️ Résumé du matin</div>
+          <button class="btn secondaire petit" id="btn-resume-ia" hidden>✨ Version assistant</button>
+        </div>
+        <div class="resume-matin__texte" id="resume-texte"><div class="centre-info"><div class="spinner"></div></div></div>
+      </div>
+
+      <div class="grille-auj">
+        <div class="carte carte--accent" id="carte-prochain-cours">
+          <div class="centre-info"><div class="spinner"></div></div>
+        </div>
+
+        <div class="carte carte--cliquable" id="auj-carte-cours-jour" data-vue-cible="edt">
+          <div class="carte__titre">📅 Cours du jour</div>
+          <div id="auj-cours-jour"><div class="centre-info"><div class="spinner"></div></div></div>
+        </div>
+
+        <div class="carte carte--cliquable" id="auj-carte-devoirs" data-vue-cible="devoirs">
+          <div class="carte__titre">📚 Devoirs à venir</div>
+          <div id="auj-devoirs"><div class="centre-info"><div class="spinner"></div></div></div>
+        </div>
+
+        <div class="carte carte--cliquable" id="auj-carte-notes" data-vue-cible="notes">
+          <div class="carte__titre">📊 Dernières notes</div>
+          <div id="auj-notes"><div class="centre-info"><div class="spinner"></div></div></div>
+        </div>
+      </div>
+
+      <!-- ── Notifications desktop natives (toasts Windows, pas navigateur) ── -->
+      <div class="carte" id="carte-notif-desktop" style="margin-top:14px;">
+        <div class="carte__titre" style="margin:0 0 6px;">🔔 Notifications desktop</div>
+        <div id="notif-desktop-statut" style="font-size:13px;color:var(--text-muted);">Vérification…</div>
+        <button class="btn secondaire petit" id="btn-notif-desktop-test" style="margin-top:8px;display:none;">Envoyer une notif de test</button>
+      </div>
+    </div>
+
+    <!-- ── Notes ────────────────────────────────────────────────────────── -->
+    <div class="vue" id="vue-notes">
+      <div class="entete-page entete-page--notes">
+        <h1>Notes</h1>
+        <div class="selecteur-periode">
+          <div class="gAvgAlgoBtn selecteur-periode__btn" id="btn-select-periode"><span id="lbl-select-periode">Période</span><span class="chev">▾</span></div>
+        </div>
+      </div>
+
+      <!-- Carte moyenne (courbe degradee + gros chiffre + selecteur d'algo) -->
+      <div class="gAvgCard" id="gAvgCard">
+        <div class="gAvgGraphWrap" id="gAvgGraphWrap">
+          <svg viewBox="0 0 400 120" id="gAvgSvg"></svg>
+          <div class="gAvgDot" id="gAvgDot"></div>
+        </div>
+        <div class="gAvgBody">
+          <div class="gAvgNumRow"><span class="gAvgNum" id="gAvgNumVal">—</span><span class="gAvgDenom">/20</span></div>
+          <div class="gAvgAlgoBtn" id="gAvgAlgoBtn"><span id="gAvgAlgoLbl">Moyenne des matières</span><span class="chev">▾</span></div>
+          <div class="gAvgSub" id="gAvgSubLbl"></div>
+        </div>
+      </div>
+
+      <!-- Carrousel des dernieres notes -->
+      <div class="recentWrap" id="recentWrap"></div>
+
+      <!-- Liste groupee par matiere -->
+      <div id="liste-notes">
+        <div class="centre-info"><div class="spinner"></div>Chargement des notes…</div>
+      </div>
+    </div>
+
+    <!-- ── Simulateur de notes ("et si ?") ─────────────────────────────── -->
+    <div class="vue" id="vue-simulateur">
+      <div class="entete-page entete-page--notes">
+        <h1>Simulateur « et si ? »</h1>
+        <div class="selecteur-periode">
+          <div class="gAvgAlgoBtn selecteur-periode__btn" id="btn-select-periode-simu"><span id="lbl-select-periode-simu">Période</span><span class="chev">▾</span></div>
+        </div>
+      </div>
+
+      <div class="carte" style="margin-bottom:12px;">
+        <div class="carte__titre" style="margin:0 0 4px;">Moyenne générale simulée</div>
+        <div class="gAvgNumRow">
+          <span class="gAvgNum" id="simu-moyenne-generale">—</span><span class="gAvgDenom">/20</span>
+        </div>
+        <div class="gAvgSub" id="simu-moyenne-sub">Ajoute des notes hypothétiques ci-dessous pour voir l'effet.</div>
+        <button class="btn secondaire petit" id="btn-simu-reset" style="margin-top:8px;">↺ Réinitialiser</button>
+      </div>
+
+      <div id="simu-liste-matieres">
+        <div class="centre-info"><div class="spinner"></div>Chargement…</div>
+      </div>
+    </div>
+
+    <!-- Feuille de selection de l'algorithme de calcul de moyenne -->
+    <div class="algoSheetBg" id="algoSheetBg"></div>
+    <div class="algoSheet" id="algoSheet">
+      <h3>Calcul de la moyenne générale</h3>
+      <p class="desc">Il existe plusieurs manières de calculer ta moyenne générale.</p>
+      <div id="algoOptsWrap"></div>
+    </div>
+
+    <!-- Fiche detail d'une note -->
+    <div class="modale-fond" id="modale-note-detail">
+      <div class="modale-boite modale-boite--note-detail">
+        <div class="modale-note-detail__scroll">
+          <div class="modale-note-detail__fermer-wrap">
+            <button class="icon-btn modale-note-detail__fermer" id="btn-fermer-note-detail">✕</button>
+          </div>
+          <div id="note-detail-contenu"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── Évolution ────────────────────────────────────────────────────── -->
+    <div class="vue" id="vue-evolution">
+      <div class="entete-page">
+        <h1>Évolution des moyennes</h1>
+        <p class="soustitre">Courbe de ta moyenne générale au fil de l'année</p>
+      </div>
+      <div class="carte">
+        <div class="graphique-conteneur">
+          <canvas id="graph-evolution"></canvas>
+        </div>
+      </div>
+      <div class="carte" id="evolution-vide-ou-matieres"></div>
+
+      <!-- ── Statistiques avancées (moyenne pondérée, médiane, écart-type…) ── -->
+      <div class="entete-page" style="margin-top:22px;">
+        <h2 style="margin:0;">Statistiques</h2>
+      </div>
+      <div id="stats-cartes" class="grille-stats"></div>
+
+      <!-- ── Comparaison par matière (vs moyenne de classe) ── -->
+      <div class="carte" style="margin-top:14px;">
+        <div class="carte__titre">📊 Comparaison par matière</div>
+        <div class="graphique-conteneur">
+          <canvas id="graph-comparaison-matieres"></canvas>
+        </div>
+      </div>
+
+      <!-- ── Profil radar ── -->
+      <div class="carte" style="margin-top:14px;">
+        <div class="carte__titre">🕸️ Profil par matière</div>
+        <div class="graphique-conteneur">
+          <canvas id="graph-radar-matieres"></canvas>
+        </div>
+      </div>
+
+      <!-- ── Répartition des coefficients ── -->
+      <div class="carte" style="margin-top:14px;">
+        <div class="carte__titre">🥧 Poids des matières (coefficients)</div>
+        <div class="graphique-conteneur">
+          <canvas id="graph-coefficients-matieres"></canvas>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── Emploi du temps ──────────────────────────────────────────────── -->
+    <div class="vue" id="vue-edt">
+      <div class="entete-page">
+        <h1>Emploi du temps</h1>
+        <div class="entete-actions">
+          <a class="btn secondaire petit" id="btn-edt-ical-fichier" href="/api/edt/ical/fichier" download="emploi_du_temps.ics">📅 Exporter (.ics)</a>
+          <button class="btn secondaire petit" id="btn-edt-ical-lien">🔗 Copier le lien d'abonnement</button>
+        </div>
+      </div>
+      <div class="nav-semaine">
+        <button class="icon-btn" id="edt-prec">◀</button>
+        <span class="nav-semaine__libelle" id="edt-libelle-semaine">Cette semaine</span>
+        <button class="icon-btn" id="edt-suiv">▶</button>
+      </div>
+      <div class="grille-semaine" id="liste-edt">
+        <div class="carte centre-info"><div class="spinner"></div>Chargement de l'emploi du temps…</div>
+      </div>
+    </div>
+
+    <!-- ── Devoirs ──────────────────────────────────────────────────────── -->
+    <div class="vue" id="vue-devoirs">
+      <div class="entete-page">
+        <h1>Devoirs</h1>
+      </div>
+      <div class="nav-semaine">
+        <button class="icon-btn" id="dev-prec">◀</button>
+        <span class="nav-semaine__libelle" id="dev-libelle-semaine">Cette semaine</span>
+        <button class="icon-btn" id="dev-suiv">▶</button>
+        <button class="btn petit" id="btn-ajouter-devoir" style="margin-left:auto;">+ Ajouter un devoir</button>
+      </div>
+      <div id="devoirs-resume"></div>
+      <div class="devoirs-filtres" id="devoirs-filtres">
+        <button class="devoirs-filtre actif" data-filtre="tous">Tous</button>
+        <button class="devoirs-filtre" data-filtre="a-faire">À faire</button>
+        <button class="devoirs-filtre" data-filtre="faits">Faits</button>
+        <button class="devoirs-filtre" data-filtre="haute">🔴 Priorité haute</button>
+        <button class="devoirs-filtre" data-filtre="moyenne">🟠 Priorité moyenne</button>
+        <button class="devoirs-filtre" data-filtre="basse">🟢 Priorité basse</button>
+      </div>
+      <div id="liste-devoirs">
+        <div class="carte centre-info"><div class="spinner"></div>Chargement des devoirs…</div>
+      </div>
+    </div>
+
+    <!-- ── Absences / retards ───────────────────────────────────────────── -->
+    <div class="vue" id="vue-absences">
+      <div class="entete-page">
+        <h1>Vie scolaire</h1>
+      </div>
+      <div class="carte">
+        <div class="carte__moyennes">
+          <div class="moyenne-bloc">
+            <span class="valeur" id="total-heures-absence">—</span>
+            <span class="libelle">Heures d'absence</span>
+          </div>
+          <div class="selecteur-periode">
+            <div class="gAvgAlgoBtn selecteur-periode__btn" id="btn-select-periode-absences"><span id="lbl-select-periode-absences">Période</span><span class="chev">▾</span></div>
+          </div>
+        </div>
+      </div>
+      <div class="carte">
+        <div class="carte__titre">🚪 Absences</div>
+        <div id="liste-absences"><div class="centre-info"><div class="spinner"></div></div></div>
+      </div>
+      <div class="carte">
+        <div class="carte__titre">⏰ Retards</div>
+        <div id="liste-retards"><div class="centre-info"><div class="spinner"></div></div></div>
+      </div>
+      <div class="carte">
+        <div class="carte__titre">📌 Punitions</div>
+        <div id="liste-punitions"><div class="centre-info"><div class="spinner"></div></div></div>
+      </div>
+    </div>
+
+    <!-- ── Actualités ───────────────────────────────────────────────────── -->
+    <div class="vue" id="vue-actualites">
+      <div class="entete-page">
+        <h1>Actualités de l'établissement</h1>
+        <div class="entete-actions">
+          <button class="btn secondaire petit" id="btn-actus-tout-lu">✓ Tout marquer comme lu</button>
+        </div>
+      </div>
+      <div class="barre-recherche">
+        <input type="search" class="champ-texte" id="recherche-actus" placeholder="Rechercher dans les actualités… (Entrée = chercher aussi dans le contenu)" autocomplete="off">
+        <button class="btn secondaire petit" id="btn-recherche-actus-contenu" title="Chercher aussi dans le texte des actualités">🔎 Dans le contenu</button>
+      </div>
+      <div class="recherche-statut" id="recherche-actus-statut" hidden></div>
+      <div id="liste-actualites">
+        <div class="carte centre-info"><div class="spinner"></div>Chargement des actualités…</div>
+      </div>
+    </div>
+
+    <!-- ── Messagerie ───────────────────────────────────────────────────── -->
+    <div class="vue" id="vue-messagerie">
+      <div class="entete-page">
+        <h1>Messagerie</h1>
+      </div>
+      <div class="messagerie-layout">
+        <div class="messagerie-colonne">
+        <div class="messagerie-outils carte">
+          <input type="search" class="champ-texte" id="recherche-messages" placeholder="Rechercher un message…" autocomplete="off">
+          <div class="messagerie-outils__boutons">
+            <button class="btn secondaire petit" id="btn-recherche-messages-contenu" title="Chercher aussi dans le texte des messages">🔎 Dans le contenu</button>
+            <button class="btn secondaire petit" id="btn-messages-tout-lu">✓ Tout marquer comme lu</button>
+          </div>
+          <div class="recherche-statut" id="recherche-messages-statut" hidden></div>
+        </div>
+        <div class="messagerie-liste carte" id="liste-discussions">
+          <div class="messagerie-liste__entete">
+            <h3>Discussions</h3>
+            <button class="btn petit" id="btn-nouveau-message">+ Nouveau</button>
+          </div>
+          <div class="centre-info"><div class="spinner"></div>Chargement…</div>
+        </div>
+        </div>
+        <div class="messagerie-fil carte" id="fil-discussion">
+          <div class="centre-info">
+            <div class="emoji">💬</div>
+            Sélectionne une discussion pour voir les messages.
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── Bulletin ─────────────────────────────────────────────────────── -->
+    <div class="vue" id="vue-bulletin">
+      <div class="entete-page">
+        <h1>Bulletin</h1>
+        <div class="gAvgAlgoBtn selecteur-periode__btn" id="btn-select-periode-bulletin"><span id="lbl-select-periode-bulletin">Période</span><span class="chev">▾</span></div>
+      </div>
+      <div id="contenu-bulletin"><div class="carte centre-info"><div class="spinner"></div>Chargement du bulletin…</div></div>
+    </div>
+
+    <!-- ── Professeurs et contacts ──────────────────────────────────────── -->
+    <div class="vue" id="vue-professeurs">
+      <div class="entete-page">
+        <h1>Professeurs et contacts</h1>
+      </div>
+      <div class="barre-recherche">
+        <input type="search" class="champ-texte" id="recherche-profs" placeholder="Rechercher un professeur ou une matière…" autocomplete="off">
+      </div>
+      <div class="prof-onglets" id="prof-onglets"></div>
+      <div id="liste-professeurs"><div class="carte centre-info"><div class="spinner"></div>Chargement de l'équipe pédagogique…</div></div>
+    </div>
+
+    <!-- ── Profil ───────────────────────────────────────────────────────── -->
+    <div class="vue" id="vue-profil">
+      <div class="entete-page">
+        <h1>Profil</h1>
+      </div>
+      <div class="carte" id="carte-profil">
+        <div class="centre-info"><div class="spinner"></div>Chargement du profil…</div>
+      </div>
+    </div>
+
+    <!-- ── Gestion (connexion / technique) ─────────────────────────────── -->
+    <div class="vue" id="vue-gestion">
+      <div class="entete-page">
+        <h1>Gestion</h1>
+      </div>
+
+      <div class="carte">
+        <div class="carte__titre">Statut de connexion</div>
+        <div class="topbar__statut" style="padding:6px 4px;">
+          <span class="pastille attente" id="gestion-pastille"></span>
+          <span id="gestion-texte-statut">Chargement…</span>
+        </div>
+        <div style="display:flex; gap:10px; margin-top:14px;">
+          <button class="btn secondaire petit" id="btn-notifications">🔔 Notifications : …</button>
+          <button class="btn secondaire petit" id="btn-reconnexion">Reconnexion QR</button>
+        </div>
+      </div>
+
+      <div class="carte" id="carte-gestion-details">
+        <div class="carte__titre">Détails techniques</div>
+        <div class="profil-grille" id="gestion-details-grille"></div>
+      </div>
+    </div>
+
+    <!-- ── Assistant IA (Gemini, accès total aux données) ──────────────── -->
+    <div class="vue" id="vue-assistant">
+      <div class="entete-page">
+        <h1>Assistant</h1>
+        <button class="btn secondaire petit" id="btn-reset-assistant-onglet">🗑️ Réinitialiser</button>
+      </div>
+
+      <div class="assistant-providers" id="assistant-providers">
+        <button class="assistant-provider-btn actif" data-provider="gemini">☁️ Gemini</button>
+        <button class="assistant-provider-btn" data-provider="ollama">💻 IA locale (Ollama)</button>
+      </div>
+
+      <!-- Barre de config Ollama : visible seulement quand ce provider est actif -->
+      <div class="carte" id="ollama-barre-config" style="display:none;margin-bottom:10px;">
+        <div id="ollama-statut-texte" style="font-size:13px;color:var(--text-muted);">Vérification du serveur Ollama local…</div>
+        <div id="ollama-select-modele-conteneur" style="display:none;margin-top:8px;">
+          <select class="champ-texte" id="ollama-select-modele"></select>
+        </div>
+      </div>
+
+      <!-- ── Modes rapides (câblés sur la VRAIE IA active, Gemini ou Ollama) ── -->
+      <div class="assistant-modes-grille" id="assistant-modes-grille">
+        <button class="assistant-mode-btn" data-mode="resume"><span class="assistant-mode-btn__icone">📝</span><span>Résumé de cours</span></button>
+        <button class="assistant-mode-btn" data-mode="explication"><span class="assistant-mode-btn__icone">🧠</span><span>Explications</span></button>
+        <button class="assistant-mode-btn" data-mode="quiz"><span class="assistant-mode-btn__icone">❓</span><span>Quiz de révision</span></button>
+        <button class="assistant-mode-btn" data-mode="conseils"><span class="assistant-mode-btn__icone">💡</span><span>Conseils d'étude</span></button>
+        <button class="assistant-mode-btn" data-mode="devoirs"><span class="assistant-mode-btn__icone">📚</span><span>Aide aux devoirs</span></button>
+        <button class="assistant-mode-btn" data-mode="objectifs"><span class="assistant-mode-btn__icone">🎯</span><span>Objectifs</span></button>
+      </div>
+      <div id="assistant-mode-actif-bandeau" style="display:none;"></div>
+
+      <div class="carte assistant-carte">
+        <div class="assistant-fil" id="assistant-fil-onglet">
+          <div class="assistant-msg assistant-msg--bot">
+            <div class="assistant-msg__bulle">
+              👋 Salut ! Je suis ton assistant complet — je peux discuter de tout comme un assistant IA classique, et j'ai en plus un accès total à tes données PRONOTE en direct (cours, devoirs, notes, absences, actualités, messagerie). Je peux aussi te programmer des rappels ("rappelle-moi à 18h de..."). Pose-moi une question !
+            </div>
+          </div>
+        </div>
+        <div class="assistant-saisie">
+          <textarea id="assistant-champ-onglet" placeholder="Pose ta question…" rows="1"></textarea>
+          <button class="btn" id="assistant-envoyer-onglet">Envoyer</button>
+        </div>
+      </div>
+    </div>
+
+  </main>
+</div>
+
+<!-- ═══════════════════ BULLE DE CHAT FLOTTANTE (accessible partout) ═══════════════════ -->
+<button class="assistant-bulle" id="assistant-bulle-toggle" title="Assistant">
+  <span id="assistant-bulle-icone">🤖</span>
+</button>
+
+<div class="assistant-flottant" id="assistant-flottant">
+  <div class="assistant-flottant__entete">
+    <span>🤖 Assistant</span>
+    <div style="display:flex; gap:6px; align-items:center;">
+      <button class="icon-btn" id="btn-reset-assistant-flottant" title="Réinitialiser" style="width:28px;height:28px;font-size:12px;">🗑️</button>
+      <button class="icon-btn" id="btn-fermer-assistant-flottant" title="Fermer" style="width:28px;height:28px;font-size:12px;">✕</button>
+    </div>
+  </div>
+  <div class="assistant-fil" id="assistant-fil-flottant"></div>
+  <div class="assistant-saisie">
+    <textarea id="assistant-champ-flottant" placeholder="Pose ta question…" rows="1"></textarea>
+    <button class="btn petit" id="assistant-envoyer-flottant">➤</button>
+  </div>
+</div>
+
+<!-- ═══════════════════ MODALE — Nouveau message ═══════════════════ -->
+<div class="modale-fond" id="modale-nouveau-message">
+  <div class="modale-boite">
+    <h2>Nouveau message</h2>
+
+    <div class="champ-libelle">Destinataire(s)</div>
+    <div class="destinataires-choisis" id="destinataires-choisis"></div>
+    <input type="text" class="recherche-destinataire" id="recherche-destinataire"
+           placeholder="Rechercher un professeur ou un membre du personnel…">
+    <div class="liste-destinataires-dispo" id="liste-destinataires-dispo">
+      <div class="centre-info"><div class="spinner"></div>Chargement des destinataires…</div>
+    </div>
+
+    <div class="champ-libelle">Objet</div>
+    <input type="text" class="champ-texte" id="nouveau-message-objet" placeholder="Objet du message" style="margin-bottom:14px;">
+
+    <div class="champ-libelle">Message</div>
+    <textarea class="champ-texte" id="nouveau-message-contenu" rows="5" placeholder="Écris ton message…" style="resize:vertical;"></textarea>
+
+    <div class="modale-actions">
+      <button class="btn secondaire" id="btn-annuler-nouveau-message">Annuler</button>
+      <button class="btn" id="btn-envoyer-nouveau-message">Envoyer</button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════ MODALE — Nouveau devoir custom ═══════════════════ -->
+<div class="modale-fond" id="modale-nouveau-devoir">
+  <div class="modale-boite">
+    <h2>Ajouter un devoir</h2>
+    <p class="modale-sous-titre">Pour un devoir donné à l'oral que le prof n'a pas mis sur Pronote.</p>
+
+    <div class="champ-libelle">Matière</div>
+    <input type="text" class="champ-texte" id="nouveau-devoir-matiere" placeholder="Ex : Mathématiques" style="margin-bottom:14px;">
+
+    <div class="champ-libelle">Pour le</div>
+    <input type="date" class="champ-texte" id="nouveau-devoir-date" style="margin-bottom:14px;">
+
+    <div class="champ-libelle">Description</div>
+    <textarea class="champ-texte" id="nouveau-devoir-description" rows="4" placeholder="Ce qu'il y a à faire…" style="resize:vertical;"></textarea>
+
+    <div class="champ-libelle">Priorité</div>
+    <select class="champ-texte" id="nouveau-devoir-priorite" style="margin-bottom:14px;">
+      <option value="haute">🔴 Haute</option>
+      <option value="moyenne" selected>🟠 Moyenne</option>
+      <option value="basse">🟢 Basse</option>
+    </select>
+
+    <div class="modale-actions">
+      <button class="btn secondaire" id="btn-annuler-nouveau-devoir">Annuler</button>
+      <button class="btn" id="btn-enregistrer-nouveau-devoir">Ajouter</button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════ FEUILLE — Choix de la période ═══════════════════ -->
+<div class="algoSheetBg" id="periodeSheetBg"></div>
+<div class="algoSheet" id="periodeSheet">
+  <h3>Choisir une période</h3>
+  <div id="periodeOptsWrap"></div>
+</div>
+
+<!-- ═══════════════════ MODALE — Contenu d'un cours ═══════════════════ -->
+<div class="modale-fond" id="modale-cours-contenu">
+  <div class="modale-boite">
+    <div style="display:flex; justify-content:space-between; align-items:flex-start;">
+      <h2 style="margin:0;">Détail du cours</h2>
+      <button class="icon-btn" id="btn-fermer-cours-contenu">✕</button>
+    </div>
+    <div id="cours-contenu-corps"></div>
+  </div>
+</div>
+
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/liquid-glass/refraction-core.js') }}"></script>
+<script src="{{ url_for('static', filename='js/liquid-glass/bottom-nav-bar.js') }}"></script>
+<script src="{{ url_for('static', filename='js/dashboard.js') }}"></script>
+<script>
+  // ═══════════════ Bottom nav bar (liquid glass) ═══════════════
+  (function () {
+    const items = [
+      { id: "aujourdhui", label: "Accueil",   icon: "🏠" },
+      { id: "notes",      label: "Notes",     icon: "📊" },
+      { id: "evolution",  label: "Évolution", icon: "📈" },
+      { id: "edt",        label: "EDT",       icon: "🗓️" },
+      { id: "devoirs",    label: "Devoirs",   icon: "📚" },
+      { id: "absences",   label: "Vie sco.",  icon: "🚪" },
+      { id: "actualites", label: "Actus",     icon: "📰", badgeId: "badge-actus" },
+      { id: "messagerie", label: "Messages",  icon: "💬", badgeId: "badge-messages" },
+      { id: "assistant",  label: "Assistant", icon: "🤖" },
+    ];
+
+    const couleurPrimaire = getComputedStyle(document.documentElement)
+      .getPropertyValue("--primary").trim() || "#29947A";
+
+    const conteneur = document.getElementById("lgnav-principale");
+    const barre = new LiquidGlassBottomNavBar(conteneur, items, {
+      size: window.innerWidth <= 480 ? "small" : "medium",
+      color: couleurPrimaire,
+      initial: "aujourdhui",
+      onSelect: (id) => activerVue(id),
+    });
+
+    // Reste synchronisée quand la vue change par un autre biais
+    // (clic sur une carte "data-vue-cible", etc.)
+    const observateurVues = new MutationObserver(() => {
+      const vueActive = document.querySelector(".vue.actif");
+      if (vueActive) {
+        const id = vueActive.id.replace("vue-", "");
+        if (items.some((it) => it.id === id)) barre.setValue(id);
+      }
+    });
+    document.querySelectorAll(".vue").forEach((v) => {
+      observateurVues.observe(v, { attributes: true, attributeFilter: ["class"] });
+    });
+
+    window.__lgnavBarrePrincipale = barre;
+  })();
+
+  // ═══════════════ Coin de gestion (haut-droite) ═══════════════
+  (function () {
+    const btn = document.getElementById("btn-coin-gestion");
+    const panneau = document.getElementById("panneau-coin-gestion");
+    if (!btn || !panneau) return;
+
+    function fermer() {
+      panneau.classList.remove("ouvert");
+      btn.setAttribute("aria-expanded", "false");
+    }
+    function ouvrir() {
+      panneau.classList.add("ouvert");
+      btn.setAttribute("aria-expanded", "true");
+    }
+    btn.addEventListener("click", (e) => {
+      e.stopPropagation();
+      panneau.classList.contains("ouvert") ? fermer() : ouvrir();
+    });
+    document.addEventListener("click", (e) => {
+      if (panneau.classList.contains("ouvert") && !panneau.contains(e.target) && e.target !== btn) {
+        fermer();
+      }
+    });
+    panneau.querySelectorAll("[data-vue-cible]").forEach((el) => {
+      el.addEventListener("click", () => fermer());
+    });
+  })();
+</script>
+{% endblock %}

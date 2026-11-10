@@ -1,0 +1,32 @@
+# ── Identifiants & données persistantes ───────────────────────────────────────
+config.env
+.pronote_data/
+
+# ── Python embed (distribué séparément, non versionné) ────────────────────────
+python-embed/
+
+# ── Bytecode Python ───────────────────────────────────────────────────────────
+__pycache__/
+*.py[cod]
+*.pyo
+
+# ── Build PyInstaller ─────────────────────────────────────────────────────────
+build/
+dist/
+*.spec
+
+# ── Environnements virtuels ───────────────────────────────────────────────────
+.venv/
+venv/
+env/
+
+# ── OS & éditeurs ─────────────────────────────────────────────────────────────
+.DS_Store
+desktop.ini
+Thumbs.db
+.idea/
+.vscode/
+.gemini/
+
+# ── Logs ──────────────────────────────────────────────────────────────────────
+*.log

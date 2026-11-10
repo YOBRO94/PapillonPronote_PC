@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{% block titre %}Dashboard PRONOTE{% endblock %}</title>
+  <link rel="icon" type="image/x-icon" href="{{ url_for('static', filename='favicon.ico') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+  <script>
+    // Applique le thème AVANT le rendu pour éviter le flash blanc/sombre
+    (function () {
+      const theme = localStorage.getItem('theme') || 'clair';
+      document.documentElement.setAttribute('data-theme', theme);
+    })();
+  </script>
+</head>
+<body>
+  <div class="theme-veil" id="theme-veil"></div>
+  <div class="toasts" id="toasts" aria-live="polite"></div>
+  {% block contenu %}{% endblock %}
+  <script src="{{ url_for('static', filename='js/vendor/chartjs/chart.umd.js') }}"></script>
+  <script>
+    // Chart.js est désormais servi en local (static/js/vendor/chartjs/),
+    // donc plus jamais bloqué par un CDN externe indisponible/filtré.
+    window.__chartJsDisponible = (typeof Chart !== "undefined");
+    if (!window.__chartJsDisponible) {
+      console.warn("[chart.js] bibliothèque indisponible — les graphiques seront désactivés.");
+    }
+  </script>
+  <script>
+    if (window.__chartJsDisponible) {
+      document.write('<script src="{{ url_for("static", filename="js/vendor/chartjs/luxon.min.js") }}"><\/script>');
+      document.write('<script src="{{ url_for("static", filename="js/vendor/chartjs/chartjs-adapter-luxon.umd.min.js") }}"><\/script>');
+    }
+  </script>
+  {% block scripts %}{% endblock %}
+</body>
+</html>

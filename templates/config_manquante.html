@@ -1,0 +1,115 @@
+{% extends "base.html" %}
+{% block titre %}Configuration requise · Dashboard PRONOTE{% endblock %}
+{% block contenu %}
+<style>
+  .cfg { max-width: 640px; margin: 0 auto; padding: 48px 18px 64px; }
+  .cfg__entete { text-align: center; margin-bottom: 22px; }
+  .cfg__entete .emoji { font-size: 44px; line-height: 1; }
+  .cfg__entete h1 { margin: 10px 0 6px; font-size: 24px; }
+  .cfg__entete p { margin: 0; color: var(--text-muted); line-height: 1.55; }
+  .cfg .carte { margin-bottom: 14px; }
+  .cfg__titre { font-weight: 700; margin: 0 0 10px; font-size: 14px; }
+  .cfg__var { display: flex; align-items: flex-start; gap: 10px; padding: 8px 0; border-bottom: 1px solid var(--border); }
+  .cfg__var:last-child { border-bottom: none; }
+  .cfg__puce { flex: none; width: 22px; height: 22px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 800; color: #fff; margin-top: 1px; }
+  .cfg__puce.ok { background: var(--primary); }
+  .cfg__puce.ko { background: var(--danger); }
+  .cfg__var code, .cfg code { font-size: 12.5px; }
+  .cfg__aide { font-size: 12.5px; color: var(--text-muted); }
+  .cfg__etat { margin-left: auto; font-size: 12px; font-weight: 600; white-space: nowrap; }
+  .cfg__etat.ok { color: var(--primary); }
+  .cfg__etat.ko { color: var(--danger); }
+  .cfg__alerte { background: var(--danger-light); color: var(--danger); border-radius: 12px; padding: 10px 12px; font-size: 13px; margin-bottom: 14px; line-height: 1.5; }
+  .cfg__etapes { margin: 0; padding-left: 20px; line-height: 1.7; font-size: 14px; }
+  .cfg__bloc { position: relative; margin-top: 10px; }
+  .cfg__bloc pre {
+    margin: 0; padding: 12px 14px; border-radius: 12px; overflow-x: auto;
+    background: var(--primary-light); font-size: 12.5px; line-height: 1.6;
+  }
+  .cfg__copier { position: absolute; top: 8px; right: 8px; }
+  .cfg__chemin { word-break: break-all; }
+  .cfg__actions { display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; margin-top: 18px; }
+  .cfg details { font-size: 13px; color: var(--text-muted); margin-top: 6px; }
+  .cfg details summary { cursor: pointer; }
+</style>
+
+<div class="cfg">
+  <div class="cfg__entete">
+    <div class="emoji">⚙️</div>
+    <h1>Il manque la configuration</h1>
+    <p>Le dashboard a besoin de tes identifiants Pronote pour se connecter.<br>
+       Ça prend une minute, une seule fois.</p>
+  </div>
+
+  {% if diag.url_suspecte %}
+  <div class="cfg__alerte">
+    <b>PRONOTE_URL</b> doit commencer par <code>https://</code> (copie l'adresse complète depuis ta barre d'adresse).
+  </div>
+  {% endif %}
+
+  <div class="carte">
+    <div class="cfg__titre">État de <code class="cfg__chemin">{{ diag.fichier }}</code></div>
+    {% if not diag.fichier_existe %}
+      <div class="cfg__alerte" style="margin-bottom:8px;">Ce fichier n'existe pas encore : il faut le créer (étape 1).</div>
+    {% endif %}
+    {% for v in diag.variables %}
+    <div class="cfg__var">
+      <span class="cfg__puce {{ 'ok' if v.ok else 'ko' }}">{{ '✓' if v.ok else '!' }}</span>
+      <div>
+        <code>{{ v.nom }}</code>
+        <div class="cfg__aide">{{ v.aide }}</div>
+      </div>
+      <span class="cfg__etat {{ 'ok' if v.ok else 'ko' }}">{{ 'renseigné' if v.ok else 'manquant' }}</span>
+    </div>
+    {% endfor %}
+    <details>
+      <summary>Les valeurs ne sont jamais affichées ici.</summary>
+      Seule la présence de chaque variable est vérifiée, jamais son contenu.
+    </details>
+  </div>
+
+  <div class="carte">
+    <div class="cfg__titre">Comment faire</div>
+    <ol class="cfg__etapes">
+      <li>
+        {% if diag.exemple_existe %}
+          Copie <code>config.example.env</code> en <code>config.env</code>, dans le même dossier que <code>app.py</code>.
+        {% else %}
+          Crée un fichier <code>config.env</code> dans le même dossier que <code>app.py</code>.
+        {% endif %}
+      </li>
+      <li>Ouvre-le et renseigne ces lignes :</li>
+    </ol>
+    <div class="cfg__bloc">
+      <button class="btn secondaire petit cfg__copier" id="cfg-copier" type="button">Copier</button>
+<pre id="cfg-modele">{% for v in diag.variables %}{{ v.nom }}={{ v.exemple }}
+{% endfor %}
+# Optionnel : active l'assistant IA et la version rédigée du résumé
+# GEMINI_API_KEY=ta_cle_gemini</pre>
+    </div>
+    <ol class="cfg__etapes" start="3" style="margin-top:10px;">
+      <li>Enregistre, puis clique sur « Vérifier à nouveau ». Pas besoin de relancer l'appli.</li>
+    </ol>
+    <details>
+      <summary>Où trouver l'adresse Pronote ?</summary>
+      C'est le lien que tu utilises pour te connecter à Pronote depuis ton navigateur
+      (souvent <code>…/pronote/eleve.html</code>). Si ton lycée passe par un ENT,
+      utilise l'identifiant et le mot de passe Pronote directs, pas ceux de l'ENT.
+    </details>
+  </div>
+
+  <div class="cfg__actions">
+    <button class="btn" type="button" onclick="location.reload()">🔄 Vérifier à nouveau</button>
+  </div>
+</div>
+
+<script>
+  document.getElementById("cfg-copier").addEventListener("click", async (e) => {
+    const btn = e.currentTarget;
+    const texte = document.getElementById("cfg-modele").textContent;
+    try { await navigator.clipboard.writeText(texte); btn.textContent = "Copié ✓"; }
+    catch (_) { btn.textContent = "Sélectionne et copie à la main"; }
+    setTimeout(() => (btn.textContent = "Copier"), 2000);
+  });
+</script>
+{% endblock %}
