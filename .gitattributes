@@ -1,0 +1,8 @@
+# ── Vendor & libs JS (ignorés par GitHub Linguist) ───────────────────────────
+static/js/vendor/**          linguist-vendored
+static/js/liquid-glass/**    linguist-vendored
+
+# ── Assets (non comptés comme code) ──────────────────────────────────────────
+static/img/**                linguist-documentation
+static/logo.png              linguist-documentation
+static/css/**                linguist-documentation
