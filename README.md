@@ -10,6 +10,7 @@
 [![Flask](https://img.shields.io/badge/Flask-web%20server-000000?style=for-the-badge&logo=flask&logoColor=white)](https://flask.palletsprojects.com)
 [![License](https://img.shields.io/badge/Licence-MIT-22c55e?style=for-the-badge)](LICENSE)
 [![pronotepy](https://img.shields.io/badge/pronotepy-2.15.7-6366f1?style=for-the-badge)](https://github.com/bain3/pronotepy)
+[![Platform](https://img.shields.io/badge/Platform-Windows%20%7C%20macOS%20%7C%20Linux-lightgrey?style=for-the-badge)](https://github.com/YOBRO94/PapillonPronote_PC)
 
 </div>
 
@@ -43,13 +44,27 @@ Il se connecte directement à ton compte PRONOTE via <a href="https://github.com
 
 ---
 
+### 🖥️ Compatibilité
+
+| Fonctionnalité | Windows | macOS | Linux |
+|---|:---:|:---:|:---:|
+| Dashboard web (`app.py`) | ✅ | ✅ | ✅ |
+| Setup interactif (`setup.py`) | ✅ | ✅ | ✅ |
+| Icône systray (`launcher.py`) | ✅ | ⚠️ partiel | ❌ |
+| Notifications desktop | ✅ | ❌ | ❌ |
+| Compilation `.exe` | ✅ | ❌ | ❌ |
+
+> Le dashboard web fonctionne sur **tous les OS**. Seul le launcher/systray est Windows-first.
+
+---
+
 ### 🚀 Installation rapide
 
 #### 1. Cloner le dépôt
 
 ```bash
-git clone https://github.com/TON_PSEUDO/PronoteDashboard.git
-cd PronoteDashboard
+git clone https://github.com/YOBRO94/PapillonPronote_PC.git
+cd PapillonPronote_PC
 ```
 
 #### 2. Lancer le setup interactif
@@ -58,7 +73,8 @@ cd PronoteDashboard
 python setup.py
 ```
 
-> Le script installe les dépendances, crée ton `config.env` avec tes identifiants PRONOTE et propose de démarrer le dashboard directement.
+> Installe les dépendances, crée ton `config.env` et propose de démarrer directement.  
+> Fonctionne sur Windows, macOS et Linux.
 
 #### 3. Ouvrir le dashboard
 
@@ -85,14 +101,14 @@ GEMINI_API_KEY=              # optionnel
 
 ### 🖥️ Lancement
 
-#### Dashboard web seul
+#### Tous OS — Dashboard web seul
 
 ```bash
 python app.py
 # → http://localhost:5001
 ```
 
-#### Avec icône dans la barre des tâches (Windows)
+#### Windows — Avec icône systray
 
 ```bash
 python launcher.py
@@ -100,7 +116,7 @@ python launcher.py
 
 ---
 
-### 📦 Compiler en `.exe` (Windows)
+### 📦 Compiler en `.exe` (Windows uniquement)
 
 ```bash
 pip install pyinstaller
@@ -121,13 +137,13 @@ pyinstaller --onefile --noconsole ^
 ### 🗂️ Structure du projet
 
 ```
-PronoteDashboard/
+PapillonPronote_PC/
 ├── app.py                  # Serveur Flask — toutes les routes API (3 000+ lignes)
 ├── launcher.py             # Point d'entrée exe / systray Windows
 ├── pronote_connexion.py    # Couche de connexion PRONOTE
-├── setup.py                # Script d'installation interactif
+├── setup.py                # Script d'installation interactif (tous OS)
 ├── config.example.env      # Modèle de configuration
-├── requirements.txt        # Dépendances Python
+├── requirements.txt        # Dépendances Python (platform-aware)
 │
 ├── pronotepy/              # Lib PRONOTE embarquée (v2.15.7)
 │   └── ent/
@@ -151,9 +167,9 @@ PronoteDashboard/
 
 ### 🤖 Assistant IA
 
-PronoteDashboard intègre deux moteurs d'IA pour t'aider avec tes cours et devoirs :
+PronoteDashboard intègre deux moteurs d'IA :
 
-**Gemini (Google)** — cloud, nécessite une clé API (gratuite) :
+**Gemini (Google)** — cloud, clé API gratuite :
 - Obtenir une clé : [aistudio.google.com/apikey](https://aistudio.google.com/apikey)
 - Renseigner `GEMINI_API_KEY` dans `config.env`
 
@@ -166,14 +182,14 @@ PronoteDashboard intègre deux moteurs d'IA pour t'aider avec tes cours et devoi
 
 ### 📋 Dépendances
 
-| Package | Rôle | Obligatoire |
-|---|---|---|
-| `flask` | Serveur web | ✅ |
-| `python-dotenv` | Lecture config.env | ✅ |
-| `google-genai` | Assistant IA Gemini | ⬜ optionnel |
-| `pystray` | Icône systray Windows | ⬜ optionnel |
-| `Pillow` | Génération icône tray | ⬜ optionnel |
-| `winotify` | Notifications desktop | ⬜ optionnel |
+| Package | Rôle | OS | Obligatoire |
+|---|---|---|---|
+| `flask` | Serveur web | Tous | ✅ |
+| `python-dotenv` | Lecture config.env | Tous | ✅ |
+| `google-genai` | Assistant IA Gemini | Tous | ⬜ optionnel |
+| `pystray` | Icône systray | Windows | ⬜ optionnel |
+| `Pillow` | Génération icône tray | Windows | ⬜ optionnel |
+| `winotify` | Notifications desktop | Windows | ⬜ optionnel |
 
 > `pronotepy` est **embarqué directement** dans le dossier `pronotepy/` — pas besoin de l'installer via pip.
 

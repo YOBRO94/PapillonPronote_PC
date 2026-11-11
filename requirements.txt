@@ -1,19 +1,17 @@
 # PronoteDashboard — dépendances Python
 # pip install -r requirements.txt
 
-# ── Core ──────────────────────────────────────────────────────────────────────
+# ── Core (tous OS — Windows, macOS, Linux) ────────────────────────────────────
 flask
 python-dotenv
 
 # ── Assistant IA (optionnel — l'app fonctionne sans) ─────────────────────────
 google-genai
 
-# ── Launcher systray Windows (optionnel — uniquement pour launcher.py / .exe) ─
-pystray
-Pillow
+# ── Windows uniquement (ignoré automatiquement sur macOS / Linux) ─────────────
+pystray; sys_platform == "win32"
+Pillow; sys_platform == "win32"
+winotify; sys_platform == "win32"
 
-# ── Notifications desktop Windows (optionnel — dégradation silencieuse) ───────
-winotify
-
-# ── Note : pronotepy est embarqué directement dans le dossier pronotepy/ ──────
-# Tu n'as pas besoin de l'installer via pip.
+# ── Note : pronotepy est embarqué dans le dossier pronotepy/ ──────────────────
+# Pas besoin de l'installer via pip.
